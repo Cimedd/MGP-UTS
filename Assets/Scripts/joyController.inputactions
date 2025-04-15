@@ -1,0 +1,34 @@
+{
+    "name": "joyController",
+    "maps": [
+        {
+            "name": "Warrior",
+            "id": "7dfa541a-71b9-405c-9c5c-427f52c0a816",
+            "actions": [
+                {
+                    "name": "Move",
+                    "type": "Value",
+                    "id": "5a9fd095-1f59-4e53-8909-dc7cd6fc0046",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "13d41c4f-1d7d-48b6-8fc2-e4374a26bcbb",
+                    "path": "<Gamepad>/leftStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Move",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
