@@ -15,7 +15,7 @@ public class LootBox : MonoBehaviour
         {
             WarriorHandler player = other.GetComponent<WarriorHandler>();
             player.ammo += 10;
-            GameObject.Destroy(this);
+            Destroy(gameObject);
         }
 
     }

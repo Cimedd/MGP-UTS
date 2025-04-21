@@ -7,6 +7,7 @@ public class EnemySpawner : MonoBehaviour
     public GameObject enemyPrefab;
     public float spawnInterval = 2f;
     public float spawnRadius = 5f;
+    public GameObject EnemyTarget;
 
     private float timer;
 
@@ -31,6 +32,8 @@ public class EnemySpawner : MonoBehaviour
             transform.position.y,
             transform.position.z + circle.y
         );
+
+        enemyPrefab.GetComponent<Enemy>().player = EnemyTarget.transform;
 
         Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
     }

@@ -4,23 +4,13 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
-/*    public Transform goal;*/
-    /* // Start is called before the first frame update
-     void Start()
-     {
-
-     }
-
-     // Update is called once per frame
-     void Update()
-     {
-
-     }*/
 
     public Transform player;
     public float moveSpeed = 5f;
     public float swarmOffset = 2f;
+    public float health = 10;
     private Vector3 swarmTarget;
+    public ParticleSystem slimeBlobFX;
 
     void Start()
     {
@@ -31,7 +21,7 @@ public class Enemy : MonoBehaviour
 
     void Update()
     {
-        if (player == null) return;
+      /*  if (player == null) return;
 
         // Move towards the player with slight offset
         Vector3 targetPos = player.position + swarmTarget;
@@ -41,5 +31,23 @@ public class Enemy : MonoBehaviour
 
         // Optional: Look at the player
         transform.forward = direction;
+
+        if(health <= 0)
+        {
+            Destroy(gameObject);
+        }*/
+    }
+
+    public void TakeDamage(float damage)
+    {
+        health -= damage;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            other.GetComponent<WarriorHandler>().TakeDamage();
+        }
     }
 }

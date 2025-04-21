@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Cinemachine;
+using static UnityEngine.UI.Image;
 
 public class WarriorHandler : MonoBehaviour
 {
+    public int health = 5;
     private Animator animator;
     private Rigidbody rb;
     private Vector3 destination;
@@ -25,6 +27,13 @@ public class WarriorHandler : MonoBehaviour
     public float dashTime = 0.5f;
     public float dashCooldown = 2f;
     public CinemachineFreeLook freeLook;
+
+    public bool isShooting = false;
+    public Transform shootPoint;
+    public Vector3 origin, direction;
+    public float damage = 5;
+
+    public UIManager uimanager;
 
     [SerializeField] private float moveSpeed = 10.0f;
     // Start is called before the first frame update
@@ -92,6 +101,8 @@ public class WarriorHandler : MonoBehaviour
         }
         freeLook.m_XAxis.Value += delta.x * orbitX * Time.deltaTime;
         freeLook.m_YAxis.Value += delta.y * orbitY   * Time.deltaTime;
+
+       
     }
 
     public void OnLookAround(InputAction.CallbackContext ctx)
@@ -102,16 +113,35 @@ public class WarriorHandler : MonoBehaviour
 
     public void OnShoot(InputAction.CallbackContext ctx)
     {
-        countShoot++;
-        Debug.Log("Shoot" + countShoot);
-        animator.SetTrigger("Shoot");
+        if(ammo > 0)
+        {
+            countShoot++;
+            Debug.Log("Shoot" + countShoot);
+            ammo -= 1;
+            animator.SetTrigger("Shoot");
+            if (Physics.Raycast(origin, direction, out RaycastHit hit, 13f))
+            {
+                if (hit.collider.CompareTag("Enemy"))
+                {
+                    Enemy enemy = hit.collider.GetComponent<Enemy>();
+                    enemy.TakeDamage(damage);
+                    Debug.Log("Enemy hit: " + hit.collider.name);
+                }
+                else
+                {
+                    Debug.Log("Hit something else: " + hit.collider.name);
+                }
+            }
+            uimanager.updateAmmo(ammo);
+        }
+     
     }
 
     public void OnJump(InputAction.CallbackContext ctx)
     {
-       /* Debug.Log("Jump");
-        animator.SetTrigger("Jump");*/
-      
+        /* Debug.Log("Jump");
+         animator.SetTrigger("Jump");*/
+     
     }
 
     public void OnMove(InputAction.CallbackContext ctx)
@@ -149,23 +179,37 @@ public class WarriorHandler : MonoBehaviour
         dashCooldown = 2f;
     }
 
-   /* public void OnRun(InputAction.CallbackContext ctx)
+    private void OnDrawGizmos()
     {
-        var touch = Touchscreen.current.primaryTouch;
-        Debug.Log("Position : " + touch.position.ReadValue());
+        origin = shootPoint.position;
+        direction = shootPoint.forward;
 
-        Ray originRay = Camera.main.ScreenPointToRay(
-            new Vector3(touch.position.x.ReadValue(), touch.position.y.ReadValue(), 0.0f));
-        RaycastHit hitInfo;
-        if(Physics.Raycast(originRay, out hitInfo))
-        {
-            if (hitInfo.transform.tag != "Player")
-            {
-                destination = new Vector3(hitInfo.point.x, hitInfo.point.y, hitInfo.point.z);
-                lookRotation = Quaternion.LookRotation(destination, Vector3.up);
-                currentMotion = 1.0f;
-                animator.SetFloat("Motion", currentMotion);
-            }
-        }
-    }*/
+        Gizmos.color = Color.green;
+        Gizmos.DrawLine(origin, origin + direction * 10f);
+    }
+
+
+    public void TakeDamage()
+    {
+        health -= 1;
+    }
+    /* public void OnRun(InputAction.CallbackContext ctx)
+     {
+         var touch = Touchscreen.current.primaryTouch;
+         Debug.Log("Position : " + touch.position.ReadValue());
+
+         Ray originRay = Camera.main.ScreenPointToRay(
+             new Vector3(touch.position.x.ReadValue(), touch.position.y.ReadValue(), 0.0f));
+         RaycastHit hitInfo;
+         if(Physics.Raycast(originRay, out hitInfo))
+         {
+             if (hitInfo.transform.tag != "Player")
+             {
+                 destination = new Vector3(hitInfo.point.x, hitInfo.point.y, hitInfo.point.z);
+                 lookRotation = Quaternion.LookRotation(destination, Vector3.up);
+                 currentMotion = 1.0f;
+                 animator.SetFloat("Motion", currentMotion);
+             }
+         }
+     }*/
 }
