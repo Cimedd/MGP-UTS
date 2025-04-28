@@ -21,7 +21,7 @@ public class Enemy : MonoBehaviour
 
     void Update()
     {
-      /*  if (player == null) return;
+        if (player == null) return;
 
         // Move towards the player with slight offset
         Vector3 targetPos = player.position + swarmTarget;
@@ -33,21 +33,34 @@ public class Enemy : MonoBehaviour
         transform.forward = direction;
 
         if(health <= 0)
-        {
+        {   
             Destroy(gameObject);
-        }*/
+        }
     }
 
     public void TakeDamage(float damage)
     {
         health -= damage;
+        if (health <= 0)
+        {
+            FindObjectOfType<UIManager>().addScore(1);
+            Destroy(gameObject);
+        }
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerStay(Collider other)
     {
         if (other.CompareTag("Player"))
         {
-            other.GetComponent<WarriorHandler>().TakeDamage();
+            WarriorHandler player = other.GetComponent<WarriorHandler>();
+            if (player != null)
+            {
+                player.TakeDamage();
+                if (slimeBlobFX != null)
+                {
+                    slimeBlobFX.Play();
+                }
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using Cinemachine;
 using static UnityEngine.UI.Image;
+using UnityEngine.InputSystem.HID;
 
 public class WarriorHandler : MonoBehaviour
 {
@@ -40,7 +41,7 @@ public class WarriorHandler : MonoBehaviour
     void Start()
     {
         animator= GetComponent<Animator>();
-       rb=GetComponent<Rigidbody>();
+        rb=GetComponent<Rigidbody>();
 
         dashCooldown = 0f;
     }
@@ -56,6 +57,13 @@ public class WarriorHandler : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Q))
         {
             StartCoroutine(Dash());
+        }
+
+        if (ammo < 30)
+        {
+            ammo += 1;
+            uimanager.updateAmmo(ammo);
+            // Wait every few seconds (we will make a coroutine below)
         }
         //TouchScreem
         /* if (Touchscreen.current.primaryTouch.press.isPressed)
@@ -119,7 +127,8 @@ public class WarriorHandler : MonoBehaviour
             Debug.Log("Shoot" + countShoot);
             ammo -= 1;
             animator.SetTrigger("Shoot");
-            if (Physics.Raycast(origin, direction, out RaycastHit hit, 13f))
+            Debug.DrawRay(origin, direction * 50f, Color.red, 2f);
+            if (Physics.Raycast(origin, direction, out RaycastHit hit, 50f))
             {
                 if (hit.collider.CompareTag("Enemy"))
                 {
@@ -192,6 +201,15 @@ public class WarriorHandler : MonoBehaviour
     public void TakeDamage()
     {
         health -= 1;
+        Debug.Log("Player Got Hit");
+
+        uimanager.updateHealth(health);  // <<< Pass current health!
+
+        if (health <= 0)
+        {
+            uimanager.panelOver.SetActive(true);
+            Time.timeScale = 0f; // Pause the game
+        }
     }
     /* public void OnRun(InputAction.CallbackContext ctx)
      {
