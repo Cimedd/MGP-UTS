@@ -6,7 +6,7 @@ using Cinemachine;
 
 public class WarriorHandler : MonoBehaviour
 {
-    public int health = 5;
+    public int health = 8;
     private Animator animator;
     private Rigidbody rb;
 
@@ -27,8 +27,8 @@ public class WarriorHandler : MonoBehaviour
 
     [Header("Dash Settings")]
     public bool isDashing = false;
-    public float dashingRange = 5f;
-    public float dashTime = 0.5f;
+    public float dashingRange = 100f;
+    public float dashTime = 0.75f;
     private float dashCooldownTimer = 0f;
     public float dashCooldown = 2f;
 
@@ -126,6 +126,7 @@ public class WarriorHandler : MonoBehaviour
 
     public void OnDash(InputAction.CallbackContext ctx)
     {
+        Debug.Log("DASH");
         if (ctx.performed && dashCooldownTimer <= 0)
         {
             StartCoroutine(Dash());
@@ -134,12 +135,24 @@ public class WarriorHandler : MonoBehaviour
 
     private IEnumerator Dash()
     {
+        Debug.Log("Started Dash!");
         isDashing = true;
         Vector3 dashDir = new Vector3(moveInput.x, 0f, moveInput.y);
         if (dashDir == Vector3.zero)
             dashDir = transform.forward;
 
-        rb.velocity = dashDir.normalized * dashingRange;
+        Vector3 startPos = transform.position;
+        Vector3 targetPos = startPos + dashDir.normalized * dashingRange;
+        float elapsed = 0f;
+
+        while (elapsed < dashTime)
+        {
+            rb.MovePosition(Vector3.Lerp(startPos, targetPos, elapsed / dashTime));
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        rb.MovePosition(targetPos);
         yield return new WaitForSeconds(dashTime);
 
         rb.velocity = Vector3.zero;
@@ -155,8 +168,14 @@ public class WarriorHandler : MonoBehaviour
 
         if (health <= 0)
         {
-            uimanager.GameOver();
+            uimanager.GameOver("You Lose");
         }
+    }
+
+    public void addAmmo()
+    {
+        ammo += 10;
+        uimanager.updateAmmo(ammo);
     }
 
     private void OnDrawGizmos()

@@ -38,7 +38,7 @@ public class LootBoxSpawner : MonoBehaviour
 
         Vector3 spawnPosition = new Vector3(
             planeCenter.x + randomX,
-            planeCenter.y + dropHeight,
+            dropHeight,
             planeCenter.z + randomZ
         );
 

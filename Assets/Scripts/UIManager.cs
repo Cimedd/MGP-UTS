@@ -9,20 +9,24 @@ public class UIManager : MonoBehaviour
 {
     public TMP_Text AmmoText;
     public List<GameObject> healthBars = new List<GameObject>();
-    public TMP_Text ScoreText;
-    public GameObject panelOver;
+    public TMP_Text ScoreText, ScoreOverText, gameStatusText;
+    public GameObject panelOver,panelStart;
     private int score = 0;
     private int healthIndex;
 
     void Start()
     {
         healthIndex = healthBars.Count - 1;
-        Time.timeScale = 1f; // Make sure time is unpaused when scene starts
+        Time.timeScale = 0f; // Make sure time is unpaused when scene starts
     }
 
     void Update()
     {
-
+        if(score == 10)
+        {
+            GameOver("YOU WIN");
+            Time.timeScale = 0f;
+        }
     }
 
     public void updateAmmo(int ammo)
@@ -44,8 +48,10 @@ public class UIManager : MonoBehaviour
         ScoreText.text = $"Score : {score}";
     }
 
-    public void GameOver()
+    public void GameOver(string status)
     {
+        gameStatusText.text = status;
+        ScoreOverText.text = score.ToString();
         panelOver.SetActive(true);
         Time.timeScale = 0f;
     }
@@ -55,5 +61,11 @@ public class UIManager : MonoBehaviour
         Time.timeScale = 1f; 
         Scene currentScene = SceneManager.GetActiveScene();
         SceneManager.LoadScene(currentScene.name);
+    }
+
+    public void StartGame()
+    {
+        panelStart.SetActive(false);
+        Time.timeScale+= 1f;
     }
 }
