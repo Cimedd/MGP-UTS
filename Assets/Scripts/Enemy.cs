@@ -4,13 +4,14 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
-
     public Transform player;
     public float moveSpeed = 5f;
     public float swarmOffset = 2f;
-    public float health = 10;
-    private Vector3 swarmTarget;
+    public float health = 10f;
     public ParticleSystem slimeBlobFX;
+    public float damageCooldown = 1.0f; // Delay between player hits
+    private float lastDamageTime = 0f;
+    private Vector3 swarmTarget;
 
     void Start()
     {
@@ -32,8 +33,8 @@ public class Enemy : MonoBehaviour
         // Optional: Look at the player
         transform.forward = direction;
 
-        if(health <= 0)
-        {   
+        if (health <= 0)
+        {
             Destroy(gameObject);
         }
     }
@@ -48,17 +49,23 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    private void OnTriggerStay(Collider other)
+    // NOTE: Now using OnCollisionStay instead of OnTriggerStay
+    private void OnCollisionStay(Collision collision)
     {
-        if (other.CompareTag("Player"))
+        if (collision.collider.CompareTag("Player"))
         {
-            WarriorHandler player = other.GetComponent<WarriorHandler>();
-            if (player != null)
+            if (Time.time - lastDamageTime >= damageCooldown)
             {
-                player.TakeDamage();
-                if (slimeBlobFX != null)
+                WarriorHandler player = collision.collider.GetComponent<WarriorHandler>();
+                if (player != null)
                 {
-                    slimeBlobFX.Play();
+                    player.TakeDamage();
+                    lastDamageTime = Time.time; // Reset cooldown
+
+                    if (slimeBlobFX != null)
+                    {
+                        slimeBlobFX.Play();
+                    }
                 }
             }
         }

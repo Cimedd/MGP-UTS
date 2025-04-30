@@ -3,172 +3,130 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Cinemachine;
-using static UnityEngine.UI.Image;
-using UnityEngine.InputSystem.HID;
 
 public class WarriorHandler : MonoBehaviour
 {
     public int health = 5;
     private Animator animator;
     private Rigidbody rb;
-    private Vector3 destination;
-    private Quaternion lookRotation, oldRotation;
-    private float currentMotion = 0.0f;
-    private float motionSpeed = 1.0f;
-    private float rotationSpeed = 5.0f;
-    private float orbitX = 100f;
-    private float orbitY = 10f;
-    private Vector2 delta;
-    private int countShoot = 0;
-    private bool isMove = false;
-    public int ammo = 30;
 
-    public bool isDashing = false;
-    public float dashingRange = 5f;
-    public float dashTime = 0.5f;
-    public float dashCooldown = 2f;
+    private Vector2 moveInput;
+    private Vector2 lookInput;
+
+    public float moveSpeed = 10f;
+    public float rotationSpeed = 5f;
+
     public CinemachineFreeLook freeLook;
 
-    public bool isShooting = false;
+    public int ammo = 30;
+    private int countShoot = 0;
     public Transform shootPoint;
-    public Vector3 origin, direction;
-    public float damage = 5;
+    public float damage = 5f;
 
     public UIManager uimanager;
 
-    [SerializeField] private float moveSpeed = 10.0f;
-    // Start is called before the first frame update
-    void Start()
-    {
-        animator= GetComponent<Animator>();
-        rb=GetComponent<Rigidbody>();
+    [Header("Dash Settings")]
+    public bool isDashing = false;
+    public float dashingRange = 5f;
+    public float dashTime = 0.5f;
+    private float dashCooldownTimer = 0f;
+    public float dashCooldown = 2f;
 
-        dashCooldown = 0f;
+    private void Start()
+    {
+        animator = GetComponent<Animator>();
+        rb = GetComponent<Rigidbody>();
+        uimanager.updateAmmo(ammo);
+        uimanager.updateHealth(health);
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        if(dashCooldown > 0f)
-        {
-            dashCooldown -= 1 * Time.deltaTime;
-        }
-       
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            StartCoroutine(Dash());
-        }
+        if (dashCooldownTimer > 0)
+            dashCooldownTimer -= Time.deltaTime;
 
-        if (ammo < 30)
+        HandleMovement();
+        HandleCamera();
+    }
+
+    private void HandleMovement()
+    {
+        Vector3 moveDir = new Vector3(moveInput.x, 0f, moveInput.y);
+        if (moveDir.magnitude > 0.1f)
         {
-            ammo += 1;
-            uimanager.updateAmmo(ammo);
-            // Wait every few seconds (we will make a coroutine below)
-        }
-        //TouchScreem
-        /* if (Touchscreen.current.primaryTouch.press.isPressed)
-         {
-             transform.position = Vector3.MoveTowards(transform.position, destination, moveSpeed * Time.deltaTime);
-             transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, 10f * Time.deltaTime);
-             currentMotion += (motionSpeed * Time.deltaTime);
-             if(currentMotion > 1.0f)
-             {
-                 currentMotion = 1.0f;
-             }
-             animator.SetFloat("Motion", currentMotion);
-         }
-         else
-         {
-             currentMotion = 0.0f;
-             animator.SetFloat("Motion", currentMotion);
-             if (currentMotion < 0.0f)
-             {
-                 currentMotion = 0.0f;
-             }
-             animator.SetFloat("Motion", currentMotion);
-         }
- */
-
-        //Controller
-        if (destination.magnitude > 0.0f)
-        {
-            Vector3 lookDirection = new Vector3(destination.x, 0.0f, destination.y);
-            Quaternion lookRotation = Quaternion.LookRotation(lookDirection, Vector3.up);
-
-            transform.rotation = Quaternion.RotateTowards(lookRotation * oldRotation, transform.rotation, rotationSpeed * Time.deltaTime);
-            
-
+            Quaternion targetRotation = Quaternion.LookRotation(moveDir);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
             transform.position += transform.forward * moveSpeed * Time.deltaTime;
-            animator.SetFloat("Motion", destination.magnitude);
+            animator.SetFloat("Motion", 1f);
         }
         else
         {
-            float temp = animator.GetFloat("Motion");
-            isMove= false;
-            animator.SetFloat("Motion", temp - (2.0f * Time.deltaTime));
+            animator.SetFloat("Motion", 0f);
         }
-        freeLook.m_XAxis.Value += delta.x * orbitX * Time.deltaTime;
-        freeLook.m_YAxis.Value += delta.y * orbitY   * Time.deltaTime;
-
-       
     }
 
-    public void OnLookAround(InputAction.CallbackContext ctx)
+    private void HandleCamera()
     {
-        Debug.Log(ctx.ReadValue<Vector2>().ToString());
-        delta = ctx.ReadValue<Vector2>();
-    }
-
-    public void OnShoot(InputAction.CallbackContext ctx)
-    {
-        if(ammo > 0)
-        {
-            countShoot++;
-            Debug.Log("Shoot" + countShoot);
-            ammo -= 1;
-            animator.SetTrigger("Shoot");
-            Debug.DrawRay(origin, direction * 50f, Color.red, 2f);
-            if (Physics.Raycast(origin, direction, out RaycastHit hit, 50f))
-            {
-                if (hit.collider.CompareTag("Enemy"))
-                {
-                    Enemy enemy = hit.collider.GetComponent<Enemy>();
-                    enemy.TakeDamage(damage);
-                    Debug.Log("Enemy hit: " + hit.collider.name);
-                }
-                else
-                {
-                    Debug.Log("Hit something else: " + hit.collider.name);
-                }
-            }
-            uimanager.updateAmmo(ammo);
-        }
-     
-    }
-
-    public void OnJump(InputAction.CallbackContext ctx)
-    {
-        /* Debug.Log("Jump");
-         animator.SetTrigger("Jump");*/
-     
+        freeLook.m_XAxis.Value += lookInput.x * 100f * Time.deltaTime;
+        freeLook.m_YAxis.Value += lookInput.y * 10f * Time.deltaTime;
     }
 
     public void OnMove(InputAction.CallbackContext ctx)
     {
-        Debug.Log(ctx.ReadValue<Vector2>().ToString());
-        destination = ctx.ReadValue<Vector2>();
+        moveInput = ctx.ReadValue<Vector2>();
+    }
 
-        if(!isMove)
+    public void OnLookAround(InputAction.CallbackContext ctx)
+    {
+        lookInput = ctx.ReadValue<Vector2>();
+    }
+
+    public void OnShoot(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed)
+            HandleShoot();
+    }
+
+    // NEW: This allows UI Button to call shooting logic
+    public void ShootFromButton()
+    {
+        HandleShoot();
+    }
+
+    private void HandleShoot()
+    {
+        if (ammo <= 0) return;
+
+        ammo--;
+        countShoot++;
+        uimanager.updateAmmo(ammo);
+        animator.SetTrigger("Shoot");
+
+        Vector3 origin = shootPoint.position;
+        Vector3 direction = shootPoint.forward;
+
+        Debug.DrawRay(origin, direction * 50f, Color.red, 2f);
+        if (Physics.Raycast(origin, direction, out RaycastHit hit, 50f))
         {
-            isMove = true;
-            oldRotation = transform.rotation;
+            if (hit.collider.CompareTag("Enemy"))
+            {
+                Enemy enemy = hit.collider.GetComponent<Enemy>();
+                if (enemy != null)
+                {
+                    enemy.TakeDamage(damage);
+                    Debug.Log("Hit enemy: " + hit.collider.name);
+                }
+            }
+            else
+            {
+                Debug.Log("Hit: " + hit.collider.name);
+            }
         }
-
     }
 
     public void OnDash(InputAction.CallbackContext ctx)
     {
-        if (dashCooldown <= 0)
+        if (ctx.performed && dashCooldownTimer <= 0)
         {
             StartCoroutine(Dash());
         }
@@ -176,58 +134,36 @@ public class WarriorHandler : MonoBehaviour
 
     private IEnumerator Dash()
     {
-        Debug.Log("Dash");
         isDashing = true;
-        Vector3 dashDirection = destination == Vector3.zero
-                ? transform.forward
-                 : new Vector3(destination.x, 0, destination.y).normalized;
-        rb.velocity = dashDirection * dashingRange; 
+        Vector3 dashDir = new Vector3(moveInput.x, 0f, moveInput.y);
+        if (dashDir == Vector3.zero)
+            dashDir = transform.forward;
+
+        rb.velocity = dashDir.normalized * dashingRange;
         yield return new WaitForSeconds(dashTime);
-        isDashing = false;
+
         rb.velocity = Vector3.zero;
-        dashCooldown = 2f;
+        isDashing = false;
+        dashCooldownTimer = dashCooldown;
+    }
+
+    public void TakeDamage()
+    {
+        health--;
+        uimanager.updateHealth(health);
+        Debug.Log("Player got hit!");
+
+        if (health <= 0)
+        {
+            uimanager.GameOver();
+        }
     }
 
     private void OnDrawGizmos()
     {
-        origin = shootPoint.position;
-        direction = shootPoint.forward;
+        if (shootPoint == null) return;
 
         Gizmos.color = Color.green;
-        Gizmos.DrawLine(origin, origin + direction * 10f);
+        Gizmos.DrawLine(shootPoint.position, shootPoint.position + shootPoint.forward * 10f);
     }
-
-
-    public void TakeDamage()
-    {
-        health -= 1;
-        Debug.Log("Player Got Hit");
-
-        uimanager.updateHealth(health);  // <<< Pass current health!
-
-        if (health <= 0)
-        {
-            uimanager.panelOver.SetActive(true);
-            Time.timeScale = 0f; // Pause the game
-        }
-    }
-    /* public void OnRun(InputAction.CallbackContext ctx)
-     {
-         var touch = Touchscreen.current.primaryTouch;
-         Debug.Log("Position : " + touch.position.ReadValue());
-
-         Ray originRay = Camera.main.ScreenPointToRay(
-             new Vector3(touch.position.x.ReadValue(), touch.position.y.ReadValue(), 0.0f));
-         RaycastHit hitInfo;
-         if(Physics.Raycast(originRay, out hitInfo))
-         {
-             if (hitInfo.transform.tag != "Player")
-             {
-                 destination = new Vector3(hitInfo.point.x, hitInfo.point.y, hitInfo.point.z);
-                 lookRotation = Quaternion.LookRotation(destination, Vector3.up);
-                 currentMotion = 1.0f;
-                 animator.SetFloat("Motion", currentMotion);
-             }
-         }
-     }*/
 }
