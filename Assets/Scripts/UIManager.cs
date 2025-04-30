@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
+
 using UnityEngine;
 using TMPro;
 
@@ -11,17 +13,16 @@ public class UIManager : MonoBehaviour
     public GameObject panelOver;
     private int score = 0;
     private int healthIndex;
-    
-    // Start is called before the first frame update
+
     void Start()
     {
         healthIndex = healthBars.Count - 1;
+        Time.timeScale = 1f; // Make sure time is unpaused when scene starts
     }
 
-    // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     public void updateAmmo(int ammo)
@@ -47,5 +48,12 @@ public class UIManager : MonoBehaviour
     {
         panelOver.SetActive(true);
         Time.timeScale = 0f;
+    }
+
+    public void RestartGame()
+    {
+        Time.timeScale = 1f; 
+        Scene currentScene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(currentScene.name);
     }
 }
